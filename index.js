@@ -5,16 +5,19 @@ import cors from "cors";
 app.use(express.json());
 app.use(cors({ origin: "*" }));
 
-const productSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
+const productSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+    },
+    price: {
+      type: Number,
+      required: [true, "Price is required"],
+    },
   },
-  price: {
-    type: Number,
-    required: true,
-  },
-});
+  { timestamps: true }
+);
 
 const Product = mongoose.model("Product", productSchema);
 
@@ -23,7 +26,9 @@ app.get("/", (req, res) => {
 });
 
 app.get("/products", async (req, res) => {
-  const products = await Product.find();
+  const products = await Product.find({ createdAt: { $exists: true } }).sort({
+    createdAt: 1,
+  });
   res.send(products);
 });
 
@@ -42,6 +47,7 @@ app.post("/products", async (req, res) => {
     await Product.create(req.body);
     res.send("hej");
   } catch (error) {
+    console.log(error.message);
     res.send("funkade ej");
   }
 });
